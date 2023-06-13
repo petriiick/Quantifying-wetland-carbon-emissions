@@ -1,0 +1,106 @@
+Metadata-Version: 2.1
+Name: shiny
+Version: 0.3.3
+Summary: A web development framework for Python.
+Home-page: https://github.com/rstudio/py-shiny
+Author: Winston Chang
+Author-email: winston@rstudio.com
+License: MIT
+Project-URL: Bug Tracker, https://github.com/rstudio/py-shiny/issues
+Project-URL: Documentation, https://shiny.rstudio.com/py/
+Project-URL: Source Code, https://github.com/rstudio/py-shiny
+Platform: any
+Classifier: Development Status :: 2 - Pre-Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Natural Language :: English
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Requires-Python: >=3.7
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: typing-extensions (>=4.0.1)
+Requires-Dist: uvicorn (>=0.16.0)
+Requires-Dist: starlette (>=0.17.1)
+Requires-Dist: contextvars (>=2.4)
+Requires-Dist: websockets (>=10.0)
+Requires-Dist: python-multipart
+Requires-Dist: htmltools (>=0.2.1)
+Requires-Dist: click (>=8.0.3)
+Requires-Dist: markdown-it-py (>=1.1.0)
+Requires-Dist: mdit-py-plugins (>=0.3.0)
+Requires-Dist: linkify-it-py (>=1.0)
+Requires-Dist: appdirs (>=1.4.4)
+Requires-Dist: asgiref (>=3.5.2)
+Requires-Dist: importlib-metadata (<5,>=1.1.0) ; python_version < "3.8"
+Provides-Extra: dev
+Requires-Dist: black (>=23.1.0) ; extra == 'dev'
+Requires-Dist: flake8-bugbear (>=23.2.13) ; extra == 'dev'
+Requires-Dist: isort (>=5.10.1) ; extra == 'dev'
+Requires-Dist: pyright (>=1.1.244) ; extra == 'dev'
+Requires-Dist: pre-commit (>=2.15.0) ; extra == 'dev'
+Requires-Dist: wheel ; extra == 'dev'
+Requires-Dist: matplotlib ; extra == 'dev'
+Requires-Dist: pandas ; extra == 'dev'
+Requires-Dist: pandas-stubs ; extra == 'dev'
+Requires-Dist: numpy ; extra == 'dev'
+Requires-Dist: shinyswatch (>=0.2.3) ; extra == 'dev'
+Requires-Dist: flake8 (==3.9.2) ; (python_version <= "3.7") and extra == 'dev'
+Requires-Dist: flake8 (>=6.0.0) ; (python_version > "3.7") and extra == 'dev'
+Provides-Extra: test
+Requires-Dist: pytest (>=6.2.4) ; extra == 'test'
+Requires-Dist: pytest-asyncio (>=0.17.2) ; extra == 'test'
+Requires-Dist: pytest-playwright (>=0.3.0) ; extra == 'test'
+Requires-Dist: pytest-xdist ; extra == 'test'
+Requires-Dist: pytest-timeout ; extra == 'test'
+Requires-Dist: psutil ; extra == 'test'
+Requires-Dist: astropy ; extra == 'test'
+Requires-Dist: suntime ; extra == 'test'
+Requires-Dist: timezonefinder ; extra == 'test'
+Requires-Dist: ipyleaflet ; extra == 'test'
+Requires-Dist: shinywidgets ; extra == 'test'
+Requires-Dist: seaborn ; extra == 'test'
+Requires-Dist: plotnine ; extra == 'test'
+Requires-Dist: plotly ; extra == 'test'
+
+Shiny for Python
+================
+
+See the [Shiny for Python website](https://shiny.rstudio.com/py/).
+
+
+## Installation
+
+To install the latest release from PyPI:
+
+```sh
+pip install shiny
+```
+
+To install the latest development version from this repository:
+
+```sh
+pip install https://github.com/rstudio/py-shiny/tarball/main
+```
+
+More detailed installation instructions, including the use of `conda`, are [also available](https://shiny.rstudio.com/py/docs/install.html).
+
+## Development
+
+If you want to do development on Shiny for Python:
+
+```sh
+pip install -e ".[dev,test]"
+```
+
+Additionally, you can install pre-commit hooks which will automatically reformat and lint the code when you make a commit:
+
+```sh
+pre-commit install
+
+# To disable:
+# pre-commit uninstall
+```
