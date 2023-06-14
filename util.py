@@ -1,5 +1,5 @@
 """
-THis script contains utility functions for the project.
+This script contains utility functions for the project.
 
 Author: Patrick Duan
 """
