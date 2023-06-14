@@ -3,9 +3,9 @@ Shiny app for wetland carbon emissions.
 
 How to use:
 1. Upload your excel file
-    a. The file should have sheet names as the sensore location name.
+    a. The file should have sheet names as the sensor location name.
     b. The file should be in .xlsx format.
-    c. The date comlumn should be named as "Date".
+    c. The date column should be named as "Date".
 
 
 """
