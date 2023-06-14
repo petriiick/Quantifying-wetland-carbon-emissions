@@ -37,7 +37,7 @@ app_ui = ui.page_fluid(
 )
 
 
-def sever(input, output, session) -> None:
+def server(input, output, session) -> None:
     """Server of the app."""
     df = pd.read_excel(input.file())
 
@@ -50,4 +50,4 @@ def sever(input, output, session) -> None:
         return poc
 
 
-app = App(app_ui, sever)
+app = App(app_ui, server)
