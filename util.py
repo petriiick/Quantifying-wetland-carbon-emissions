@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import plotly.graph_objects as go
-import geotiff
+
 # Missing value Imputation:
 from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import IterativeImputer
