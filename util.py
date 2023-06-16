@@ -136,6 +136,5 @@ def plot_map(df: pd.DataFrame):
             showlegend = False,
         )
     )
-    print("success")
-    fig.show()
+    
     return fig
