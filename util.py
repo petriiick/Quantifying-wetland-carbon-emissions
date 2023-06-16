@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import plotly.graph_objects as go
-
+import geotiff
 # Missing value Imputation:
 from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import IterativeImputer
@@ -107,6 +107,19 @@ def create_map(df: pd.DataFrame):
 
 # Sophia testing... creates a map using uploaded excel file
 def plot_map(df: pd.DataFrame):
+    
+    # Load the GeoTIFF file using rasterio
+    geotiff_file = "data\wetland_perc.tif" 
+    # geotiff = rasterio.open(geotiff_file)
+    geo_tiff = geotiff.GeoTiff(geotiff_file)
+    # Read the raster data and transform coordinates
+    # transform = geotiff.transform    
+    raster_data = geo_tiff.read()
+    
+    # Get the x and y coordinates for the grid cells
+    # x_coords = transform[2] + transform[0] * np.arange(raster_data.shape[1])
+    # y_coords = transform[5] + transform[4] * np.arange(raster_data.shape[0])
+    
     fig = go.FigureWidget(
         data = [
             go.Scattermapbox(
@@ -121,6 +134,13 @@ def plot_map(df: pd.DataFrame):
                 ),
                 text = df['Site'],
                 hoverinfo = 'text'
+            ), 
+            go.Heatmap(
+                z=raster_data,
+                # x=x_coords,
+                # y=y_coords,
+                zsmooth="fast",
+                colorscale="Viridis"
             )],
         layout = dict(
             autosize = True,
@@ -135,4 +155,6 @@ def plot_map(df: pd.DataFrame):
             showlegend = False,
         )
     )
+    print("success")
+    fig.show()
     return fig
