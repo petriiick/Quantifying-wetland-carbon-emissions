@@ -104,3 +104,35 @@ def create_map(df: pd.DataFrame):
         ),
     )
     return fig
+
+# Sophia testing... creates a map using uploaded excel file
+def plot_map(df: pd.DataFrame):
+    fig = go.FigureWidget(
+        data = [
+            go.Scattermapbox(
+                lat = df['Latitude'],
+                lon = df['Longitude'],
+                mode = 'markers',
+                marker = go.scattermapbox.Marker(
+                    size = 10,
+                    sizemode = 'diameter',
+                    color = '#0d6aff',
+                    opacity = 0.5
+                ),
+                text = df['Site'],
+                hoverinfo = 'text'
+            )],
+        layout = dict(
+            autosize = True,
+            hovermode = 'closest',
+            height = 600,
+            width = 1000,
+            margin = {"r":0,"t":0,"l":0,"b":0},
+            mapbox = dict(
+                style = 'carto-darkmatter',
+                zoom = 0.9
+            ),
+            showlegend = False,
+        )
+    )
+    return fig
