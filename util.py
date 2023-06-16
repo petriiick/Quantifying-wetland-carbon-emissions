@@ -136,5 +136,15 @@ def plot_map(df: pd.DataFrame):
             showlegend = False,
         )
     )
-    
+    return fig
+
+def timeseries(df: pd.DataFrame, sensor: str, variable: str):
+    '''Return a timeseries plot'''
+    df= df[df['sheet_name']==sensor]
+    imp = IterativeImputer(max_iter=10, random_state=0)
+    new_d= pd.DataFrame(np.round(imp.fit_transform(df)),)
+    new_d['Date']= new_d['Date'].astype(int).astype(str)
+    new_d['Date']= pd.to_datetime(new_d['Date'], format='%Y%m%d')
+    sns.set(rc={'figure.figsize':(11.7,8.27)})
+    fig= sns.lineplot(x='Date', y= variable, data=new_d)
     return fig
