@@ -6,9 +6,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.graph_objects as go
+from shinywidgets import output_widget, register_widget
+
 
 # utils:
-from util import Get_sheet_names, data_prep, get_coordination, create_map, plot_map
+from util import Get_sheet_names, data_prep, plot_map, timeseries
 # default map
 loc = pd.read_excel('./data/flux_site_loc.xlsx')
 
@@ -39,33 +41,46 @@ app_ui = ui.page_fluid(
                 ui.output_ui("var_chosen"),
         ),
         ui.panel_main(
-            ui.input_file(
-                "file1", "Upload Your excel file here (.xlsx)", accept=[".xlsx"]
+            ui.row(
+                ui.column(5,
+                    ui.input_file(
+                        "file1", "Upload your site locations (.xlsx)", accept=[".xlsx"]
+                    )),
+                ui.column(5, ui.input_file(
+                    "file2", "Upload your data (.xlsx)", accept=[".xlsx"]
+                ))
             ),
-            ui.output_ui("path"),
-            ui.output_plot("map", "Wetland Sites")
+            # ui.output_ui("path"),
+            output_widget("map")
         )
-    )
-    
+    )    
 )
 
 def server(input, output, session):
+    # Read the location :
+    @reactive.Effect
+    @reactive.event(input.file1)
+    def _():
+        f: list[FileInfo] = input.file1()
+        loc = pd.read_excel(f[0]["datapath"])
+
+
     @output
     @render.ui
     def var_chosen():
         req(input.var())
         return "You chose the variable(s) " + ", ".join(input.var())
 
-    @output
-    @render.ui
-    def path():
-        # create_map(df: pd.DataFrame)
-        if input.file1() is None:
-            return "Please upload a .xlsx file"
-        f: list[FileInfo] = input.file1()
-        df = pd.read_excel(f[0]["datapath"])
-        return ui.HTML(df.to_html(classes="table table-striped"))
-    
+    # @output
+    # @render.ui
+    # def path():
+    #     # create_map(df: pd.DataFrame)
+    #     if input.file1() is None:
+    #         return "Please upload a .xlsx file"
+    #     f: list[FileInfo] = input.file1()
+    #     df = pd.read_excel(f[0]["datapath"])
+    #     return ui.HTML(df.to_html(classes="table table-striped"))    
+
     # when a .xlsx file is uploaded, update the map output
     # gives error @render.plot doesn't know to render objects of type class str
     @output
@@ -74,15 +89,14 @@ def server(input, output, session):
         # create_map(df: pd.DataFrame)
         if input.file1() is None:
             return "Please upload a .xlsx file"
-        f: list[FileInfo] = input.file1()
-        loc = pd.read_excel(f[0]["datapath"])
         # # loc = pd.read_excel(f[0]["datapath"])
         # names = Get_sheet_names(input.file())
         # final_def = data_prep(f[0]["datapath"], names)
         map = plot_map(loc)
+        register_widget("map", map)
         return map
 
-    # # when checkboxes change, update timeseries
+    # when checkboxes change, update timeseries
     # @reactive.Effect
     # @reactive.event(input.var)
     # def _timeseries():
@@ -93,18 +107,15 @@ def server(input, output, session):
     # # function to make a timeseries plot given a variable to show
     # @reactive.Effect
     # def make_timeseries(variable: str):
-    #     # do stuff to make it, this is a placholder
-    #     np.random.seed(19680801)
-    #     x_rand = 100 + 15 * np.random.randn(437)
-    #     fig, ax = plt.subplots()
-    #     ax.hist(x_rand, int(input.n()), density=True)
-    #     ax.set_title(variable)
+    #     timeseries(f: pd.DataFrame, sensor: str, variable: str)
     #     # display plot
     #     ui.insert_ui(
     #         ui.output_plot("timeseries"),
     #         selector = "var",
     #         where = "afterEnd"
     #     )
+
+    
 
 app = App(app_ui, server)
 
