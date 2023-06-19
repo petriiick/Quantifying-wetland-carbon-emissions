@@ -108,6 +108,7 @@ def create_map(df: pd.DataFrame):
 
 # Sophia testing... creates a map using uploaded excel file
 def plot_map(df: pd.DataFrame):
+    
     fig = go.FigureWidget(
         data = [
             go.Scattermapbox(
