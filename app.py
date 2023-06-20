@@ -10,7 +10,7 @@ from shinywidgets import output_widget, register_widget
 
 
 # utils:
-from util import Get_sheet_names, data_prep, plot_map, timeseries
+from util import Get_sheet_names, data_prep, plot_map, timeseries, plot_better_map
 # default map
 loc = pd.read_excel('./data/flux_site_loc.xlsx')
 
@@ -92,7 +92,7 @@ def server(input, output, session):
         # # loc = pd.read_excel(f[0]["datapath"])
         # names = Get_sheet_names(input.file())
         # final_def = data_prep(f[0]["datapath"], names)
-        map = plot_map(loc)
+        map = plot_better_map(loc)
         register_widget("map", map)
         return map
 

@@ -108,7 +108,6 @@ def create_map(df: pd.DataFrame):
 
 # Sophia testing... creates a map using uploaded excel file
 def plot_map(df: pd.DataFrame):
-    
     fig = go.FigureWidget(
         data = [
             go.Scattermapbox(
@@ -138,6 +137,44 @@ def plot_map(df: pd.DataFrame):
         )
     )
     return fig
+
+# Dennis map
+def plot_better_map(df: pd.DataFrame):
+    token = open("/users/sophi/Desktop//Quantifying-wetland-carbon-emissions/data/.mapbox_token").read() # you will need your own token
+    fig = go.Figure()
+    fig.add_trace(
+        go.Scattermapbox(
+            lat = df['Latitude'],
+            lon = df['Longitude'],
+            mode = 'markers',
+            marker = go.scattermapbox.Marker(
+                size = 10,
+                sizemode = 'diameter',
+                color = '#0d6aff',
+                opacity = 0.7
+            ),
+            text = df['Site'],
+            hoverinfo = 'text'
+        )
+    )   
+    fig.update_layout(
+        autosize = True,
+        hovermode = 'closest',
+        height = 700,
+        width = 800,
+        margin = {"r":0,"t":0,"l":0,"b":0},
+        mapbox = dict(
+            style = 'mapbox://styles/denniswu28/cliz6yff602nk01qp2dv668w7',
+            zoom = 4.6,
+            accesstoken = token,
+            center=go.layout.mapbox.Center(
+                lat=33,
+                lon=-85
+            ),
+        ),
+    )
+    return fig
+
 
 def timeseries(df: pd.DataFrame, sensor: str, variable: str):
     '''Return a timeseries plot'''
