@@ -67,12 +67,18 @@ def data_prep(df_path: str, sheet_list: list) -> pd.DataFrame:
         for sheet in sheet_list
     ]
     final_df = pd.concat(df_list)
-
+    cn= list(final_df.columns)
+    cn.pop()
+    cn = cn + ['sensor_name']
+    nu_va= [i for i in cn if i != 'sensor_name']
+    final_df = final_df[nu_va]
+    sensor_column= final_df.pop('sensor_name')
     imp = IterativeImputer(max_iter=10, random_state=0)
     new_d = pd.DataFrame(np.round(imp.fit_transform(final_df), 4))
     new_d.columns = final_df.columns
     new_d["Date"] = new_d["Date"].astype(int).astype(str)
     new_d["Date"] = pd.to_datetime(new_d["Date"], format="%Y%m%d")
+    new_df= pd.concat(new_df,sensor_column, axis= 1)
 
     return new_d
 
@@ -179,10 +185,6 @@ def plot_better_map(df: pd.DataFrame):
 def timeseries(df: pd.DataFrame, sensor: str, variable: str):
     '''Return a timeseries plot'''
     df= df[df['sheet_name']==sensor]
-    imp = IterativeImputer(max_iter=10, random_state=0)
-    new_d= pd.DataFrame(np.round(imp.fit_transform(df)),)
-    new_d['Date']= new_d['Date'].astype(int).astype(str)
-    new_d['Date']= pd.to_datetime(new_d['Date'], format='%Y%m%d')
     sns.set(rc={'figure.figsize':(11.7,8.27)})
-    fig= sns.lineplot(x='Date', y= variable, data=new_d)
+    fig= sns.lineplot(x='Date', y= variable, data=df)
     return fig

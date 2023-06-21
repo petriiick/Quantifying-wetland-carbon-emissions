@@ -53,7 +53,8 @@ app_ui = ui.page_fluid(
             # ui.output_ui("path"),
             output_widget("map")
         )
-    )    
+    ),
+    ui.output_plot("show_timeseries")    
 )
 
 def server(input, output, session):
@@ -72,7 +73,7 @@ def server(input, output, session):
         file_2 = input.file2()
         if file_2 is None:
             return pd.DataFrame()
-        return pd.read_excel(file_2[0]["datapath"])
+        return file_2[0]["datapath"]
 
     @output
     @render.ui
@@ -105,6 +106,25 @@ def server(input, output, session):
         map = plot_better_map(loc)
         register_widget("map", map)
         return map
+    
+    @reactive.Effect
+    @reactive.event(input.var)
+    def variable():
+        # var_choose= input.var()
+        return input.var()
+        
+
+    @output
+    @render.plot
+    def show_timeseries():
+        df= parse_sta()
+        # variable= variable()
+        sheet_name= Get_sheet_names(df)
+        new_df= data_prep(df,sheet_name)
+        return timeseries(new_df,'xDL','NEE')
+
+
+
 
     # when checkboxes change, update timeseries
     # @reactive.Effect
