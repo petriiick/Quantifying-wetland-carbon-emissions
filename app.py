@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.graph_objects as go
-from shinywidgets import output_widget, register_widget
+from shinywidgets import output_widget, register_widget, render_widget
 
 
 # utils:
@@ -57,20 +57,29 @@ app_ui = ui.page_fluid(
 )
 
 def server(input, output, session):
-    # Read the location :
-    @reactive.Effect
+    # Read the location and statistic data :
+    @reactive.Calc
     @reactive.event(input.file1)
-    def _():
-        f: list[FileInfo] = input.file1()
-        loc = pd.read_excel(f[0]["datapath"])
+    def parse_map():
+        file_1 = input.file1()
+        if file_1 is None:
+            return pd.DataFrame()
+        return pd.read_excel(file_1[0]["datapath"])
 
+    @reactive.Calc
+    @reactive.event(input.file2)
+    def parse_sta():
+        file_2 = input.file2()
+        if file_2 is None:
+            return pd.DataFrame()
+        return pd.read_excel(file_2[0]["datapath"])
 
     @output
     @render.ui
     def var_chosen():
         req(input.var())
         return "You chose the variable(s) " + ", ".join(input.var())
-
+    
     # @output
     # @render.ui
     # def path():
@@ -79,19 +88,20 @@ def server(input, output, session):
     #         return "Please upload a .xlsx file"
     #     f: list[FileInfo] = input.file1()
     #     df = pd.read_excel(f[0]["datapath"])
-    #     return ui.HTML(df.to_html(classes="table table-striped"))    
+    #     return ui.HTML(df.to_html(classes="table table-striped"))
 
     # when a .xlsx file is uploaded, update the map output
     # gives error @render.plot doesn't know to render objects of type class str
     @output
-    @render.plot
+    @render_widget
     def map():
         # create_map(df: pd.DataFrame)
-        if input.file1() is None:
-            return "Please upload a .xlsx file"
+        # if input.file1() is None:
+        #     return "Please upload a .xlsx file"
         # # loc = pd.read_excel(f[0]["datapath"])
         # names = Get_sheet_names(input.file())
         # final_def = data_prep(f[0]["datapath"], names)
+        loc = parse_map()
         map = plot_better_map(loc)
         register_widget("map", map)
         return map
@@ -115,7 +125,7 @@ def server(input, output, session):
     #         where = "afterEnd"
     #     )
 
-    
 
 app = App(app_ui, server)
+
 
