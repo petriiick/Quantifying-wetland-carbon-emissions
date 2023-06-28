@@ -7,6 +7,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import plotly.graph_objects as go
+import seaborn as sns
+import copy
 
 # Missing value Imputation:
 from sklearn.experimental import enable_iterative_imputer
@@ -108,6 +110,7 @@ def create_map(df: pd.DataFrame):
 # Sophia testing... creates a map using uploaded excel file
 def plot_map(df: pd.DataFrame):
     
+    token = 'pk.eyJ1IjoiZGVubmlzd3UyOCIsImEiOiJjbGl6NmJ3ZDYwNDNrM2NuZW1lNmEwMzAwIn0.NupBJ_bWkbOZLy2gC6JeMg'
     fig = go.FigureWidget(
         data = [
             go.Scattermapbox(
@@ -115,10 +118,10 @@ def plot_map(df: pd.DataFrame):
                 lon = df['Longitude'],
                 mode = 'markers',
                 marker = go.scattermapbox.Marker(
-                    size = 10,
+                    size = [12] * df['Latitude'].size,
                     sizemode = 'diameter',
-                    color = '#0d6aff',
-                    opacity = 0.5
+                    color = ['#0d6aff'] * df['Latitude'].size,
+                    opacity = 0.7
                 ),
                 text = df['Site'],
                 hoverinfo = 'text'
@@ -126,17 +129,32 @@ def plot_map(df: pd.DataFrame):
         layout = dict(
             autosize = True,
             hovermode = 'closest',
-            height = 600,
-            width = 1000,
+            height = 400,
+            width = 800,
             margin = {"r":0,"t":0,"l":0,"b":0},
             mapbox = dict(
-                style = 'carto-darkmatter',
-                zoom = 0.9
+                style = 'mapbox://styles/denniswu28/cliz6yff602nk01qp2dv668w7',
+                zoom = 4.1,
+                accesstoken = token,
+                center=go.layout.mapbox.Center(
+                    lat=31.82,
+                    lon=-84.25
+                ),
             ),
             showlegend = False,
         )
     )
+
     return fig
+
+
+# def update_map(new_loc: pd.DataFrame, map: ):
+#     len = new_loc['Latitude'].size
+#     colors = ['#0d6aff'] * len
+#     map.data[0].lat = new_loc['Latitude']
+#     map.data[0].lon = new_loc['Longitude']
+#     map.data[0].marker.color = colors
+#     map.data[0].marker.size = [12] * len    
 
 def timeseries(df: pd.DataFrame, sensor: str, variable: str):
     '''Return a timeseries plot'''

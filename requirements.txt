@@ -1,5 +1,4 @@
 shiny
-shinywidgets
 plotly
 ipywidgets==7.7.3
 pandas
