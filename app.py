@@ -108,6 +108,7 @@ def server(input, output, session):
             return pd.DataFrame()
         return pd.read_excel(file_2[0]["datapath"])
     
+    # Update map after new location file is uploaded
     @reactive.Effect()
     def _():
         new_loc = parse_map()
@@ -124,7 +125,8 @@ def server(input, output, session):
             color.set(map.data[0].marker.color)
         map.data[0].on_click(update_point)
         register_widget("map", map)
-        
+    
+    # Return selected site name
     @reactive.Calc()
     def select_loc():
         data = reactive_read(map, "data")
@@ -147,6 +149,7 @@ def server(input, output, session):
         return "You chose the variable(s) " + ", ".join(input.var())
     
 
+    # Output selected site info under map
     @output
     @render.text
     def loc():
