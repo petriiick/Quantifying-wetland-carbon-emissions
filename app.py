@@ -10,7 +10,7 @@ from shinywidgets import output_widget, register_widget, render_widget
 
 
 # utils:
-from util import Get_sheet_names, data_prep, plot_map, timeseries, plot_better_map
+from util import data_prep, plot_map, timeseries, plot_better_map
 # default map
 loc = pd.read_excel('./data/flux_site_loc.xlsx')
 
@@ -73,8 +73,9 @@ def server(input, output, session):
         file_2 = input.file2()
         if file_2 is None:
             return pd.DataFrame()
+        # df= file_2[0]["datapath"]
         return file_2[0]["datapath"]
-
+    
     @output
     @render.ui
     def var_chosen():
@@ -117,11 +118,9 @@ def server(input, output, session):
     @output
     @render.plot
     def show_timeseries():
-        df= parse_sta()
         # variable= variable()
-        sheet_name= Get_sheet_names(df)
-        new_df= data_prep(df,sheet_name)
-        return timeseries(new_df,'xDL','NEE')
+        # sheet_name= Get_sheet_names(df)
+        return timeseries(data_prep(parse_sta(),'DPW'),'NEE')
 
 
 

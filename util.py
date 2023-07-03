@@ -37,49 +37,29 @@ def get_coordination(df: pd.DataFrame) -> pd.DataFrame:
     return coodi_df
 
 
-def Get_sheet_names(df_path: str) -> list:
-    """Get sheet names from excel file.
+# def Get_sheet_names(df_path: str) -> list:
+#     """Get sheet names from excel file.
 
-    Args:
-        df_path (str): Path to excel file.
+#     Args:
+#         df_path (str): Path to excel file.
 
-    Returns:
-        list: Sheet names.
-    """
-    xl = pd.ExcelFile(df_path)
-    return xl.sheet_names
+#     Returns:
+#         list: Sheet names.
+#     """
+#     xl = pd.ExcelFile(df_path)
+#     return xl.sheet_names
 
 
-def data_prep(df_path: str, sheet_list: list) -> pd.DataFrame:
-    """Prepare data for analysis.
+def data_prep(df_path: str, 
+            # sheet_list: list,
+            sensor: str) -> pd.DataFrame:
 
-    Args:
-        df (pd.DataFrame): Raw data.
-
-    Returns:
-        pd.DataFrame: Cleaned data.
-    """
-    # Get sheet names
-    # concatenate all sheets into one dataframe
-    # impute missing values
-    df_list = [
-        pd.read_excel(df_path, sheet_name=sheet).assign(sheet_name=sheet)
-        for sheet in sheet_list
-    ]
-    final_df = pd.concat(df_list)
-    cn= list(final_df.columns)
-    cn.pop()
-    cn = cn + ['sensor_name']
-    nu_va= [i for i in cn if i != 'sensor_name']
-    final_df = final_df[nu_va]
-    sensor_column= final_df.pop('sensor_name')
+    df= pd.read_excel(df_path, sheet_name=sensor)
     imp = IterativeImputer(max_iter=10, random_state=0)
-    new_d = pd.DataFrame(np.round(imp.fit_transform(final_df), 4))
-    new_d.columns = final_df.columns
+    new_d = pd.DataFrame(np.round(imp.fit_transform(df), 4))
+    new_d.columns= df.columns
     new_d["Date"] = new_d["Date"].astype(int).astype(str)
     new_d["Date"] = pd.to_datetime(new_d["Date"], format="%Y%m%d")
-    new_df= pd.concat(new_df,sensor_column, axis= 1)
-
     return new_d
 
 
@@ -182,9 +162,9 @@ def plot_better_map(df: pd.DataFrame):
     return fig
 
 
-def timeseries(df: pd.DataFrame, sensor: str, variable: str):
+def timeseries(df: pd.DataFrame, variable: str):
     '''Return a timeseries plot'''
-    df= df[df['sheet_name']==sensor]
+    # df= df[df['sheet_name']==sensor]
     sns.set(rc={'figure.figsize':(11.7,8.27)})
     fig= sns.lineplot(x='Date', y= variable, data=df)
     return fig
