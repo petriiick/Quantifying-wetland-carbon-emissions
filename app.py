@@ -2,15 +2,13 @@ from shiny import *
 from shiny.types import FileInfo
 import pandas as pd
 import numpy as np
-# from htmltools import HTML
 import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.graph_objects as go
 from shinywidgets import output_widget, register_widget, render_widget
 
+from util import data_prep, plot_map, timeseries
 
-# utils:
-from util import data_prep, plot_map, timeseries, plot_better_map
 # default map
 loc = pd.read_excel('./data/flux_site_loc.xlsx')
 
@@ -18,7 +16,6 @@ app_ui = ui.page_fluid(
     ui.panel_title("View time series' for your site"),
     ui.layout_sidebar(
         ui.panel_sidebar(
-            # ui.HTML(style = "height: 90vh; overflow-y: auto;"), 
             ui.input_checkbox_group("var", "Variable(s) to Visualize:", 
                 {
                     "NEE" : "NEE",
@@ -38,7 +35,6 @@ app_ui = ui.page_fluid(
                     "SIF_daily_8day" : "SIF_daily_8day",
                     "SIF_month" : "SIF_month"
                 }),
-                ui.output_ui("var_chosen"),
         ),
         ui.panel_main(
             ui.row(
@@ -50,7 +46,6 @@ app_ui = ui.page_fluid(
                     "file2", "Upload your data (.xlsx)", accept=[".xlsx"]
                 ))
             ),
-            # ui.output_ui("path"),
             output_widget("map")
         )
     ),
@@ -58,7 +53,7 @@ app_ui = ui.page_fluid(
 )
 
 def server(input, output, session):
-    # Read the location and statistic data :
+    # Read the location data
     @reactive.Calc
     @reactive.event(input.file1)
     def parse_map():
@@ -67,89 +62,35 @@ def server(input, output, session):
             return pd.DataFrame()
         return pd.read_excel(file_1[0]["datapath"])
 
+    # Read sensor data
     @reactive.Calc
     @reactive.event(input.file2)
     def parse_sta():
         file_2 = input.file2()
         if file_2 is None:
             return pd.DataFrame()
-        # df= file_2[0]["datapath"]
         return file_2[0]["datapath"]
-    
-    @output
-    @render.ui
-    def var_chosen():
-        req(input.var())
-        return "You chose the variable(s) " + ", ".join(input.var())
-    
-    # @output
-    # @render.ui
-    # def path():
-    #     # create_map(df: pd.DataFrame)
-    #     if input.file1() is None:
-    #         return "Please upload a .xlsx file"
-    #     f: list[FileInfo] = input.file1()
-    #     df = pd.read_excel(f[0]["datapath"])
-    #     return ui.HTML(df.to_html(classes="table table-striped"))
 
-    # when a .xlsx file is uploaded, update the map output
-    # gives error @render.plot doesn't know to render objects of type class str
+    # when location data is uploaded, update the map output
     @output
     @render_widget
     def map():
-        # create_map(df: pd.DataFrame)
-        # if input.file1() is None:
-        #     return "Please upload a .xlsx file"
-        # # loc = pd.read_excel(f[0]["datapath"])
-        # names = Get_sheet_names(input.file())
-        # final_def = data_prep(f[0]["datapath"], names)
         loc = parse_map()
-        map = plot_better_map(loc)
+        map = plot_map(loc)
         register_widget("map", map)
         return map
     
-    # @reactive.Effect
+    # returns the list of variables the user checked
     @reactive.event(input.var)
     def variable():
-        # var_choose= input.var()
         return input.var()
         
-
+    # displays the timeseries
     @output
     @render.plot
     def show_timeseries():
-        # variable= variable()
-        # sheet_name= Get_sheet_names(df)
-        height= len(variable()) * 11.7
-        width= 8.27
-        sns.set(rc={'figure.figsize':(height,width)})
+        # TO DO make fig size interactive based on len(variable())
+        sns.set(rc={'figure.figsize':(8.27,11.7)})
         return timeseries(data_prep(parse_sta(),'DPW'), variable())
 
-       
-
-
-
-
-    # when checkboxes change, update timeseries
-    # @reactive.Effect
-    # @reactive.event(input.var)
-    # def _timeseries():
-    #     variables = input.var()
-    #     for variable in variables:
-    #         make_timeseries(variable)
-
-    # # function to make a timeseries plot given a variable to show
-    # @reactive.Effect
-    # def make_timeseries(variable: str):
-    #     timeseries(f: pd.DataFrame, sensor: str, variable: str)
-    #     # display plot
-    #     ui.insert_ui(
-    #         ui.output_plot("timeseries"),
-    #         selector = "var",
-    #         where = "afterEnd"
-    #     )
-
-
 app = App(app_ui, server)
-
-
