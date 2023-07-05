@@ -108,7 +108,7 @@ def server(input, output, session):
         register_widget("map", map)
         return map
     
-    @reactive.Effect
+    # @reactive.Effect
     @reactive.event(input.var)
     def variable():
         # var_choose= input.var()
@@ -120,7 +120,12 @@ def server(input, output, session):
     def show_timeseries():
         # variable= variable()
         # sheet_name= Get_sheet_names(df)
-        return timeseries(data_prep(parse_sta(),'DPW'),'NEE')
+        height= len(variable()) * 11.7
+        width= 8.27
+        sns.set(rc={'figure.figsize':(height,width)})
+        return timeseries(data_prep(parse_sta(),'DPW'), variable())
+
+       
 
 
 

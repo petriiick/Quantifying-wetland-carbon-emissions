@@ -162,9 +162,13 @@ def plot_better_map(df: pd.DataFrame):
     return fig
 
 
-def timeseries(df: pd.DataFrame, variable: str):
+def timeseries(df: pd.DataFrame, variable: list[str]):
     '''Return a timeseries plot'''
     # df= df[df['sheet_name']==sensor]
-    sns.set(rc={'figure.figsize':(11.7,8.27)})
-    fig= sns.lineplot(x='Date', y= variable, data=df)
+    index= 0
+    fig, axes= plt.subplots(len(variable),1,squeeze= False)
+    for var in variable:
+        sns.lineplot(x='Date', y= var, data=df, ax= axes[index,0])
+        index+=1
+
     return fig
