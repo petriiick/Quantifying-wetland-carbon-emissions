@@ -37,6 +37,7 @@ app_ui = ui.page_fluid(
                     "SIF_daily_8day" : "SIF_daily_8day",
                     "SIF_month" : "SIF_month"
                 }),
+            ui.output_text("error")
         ),
         ui.panel_main(
             ui.row(
@@ -48,7 +49,7 @@ app_ui = ui.page_fluid(
                     "file2", "#2 Upload your data (.xlsx)", accept=[".xlsx"]
                 ))
             ),
-            ui.output_text_verbatim("loc"),
+            ui.output_text("loc"),
             output_widget("map"),
         )
     ),
@@ -120,7 +121,7 @@ def server(input, output, session):
         except ValueError:
             index = -1
         if index == -1:
-            return '#3 Please select desired site by clicking on the corresponding marker in the map.'
+            return '#3 Please select desired site by clicking on the corresponding marker in the map!!!'
         else:
             return 'You have selected location ' + loc[index]
     
@@ -154,5 +155,14 @@ def server(input, output, session):
         # TO DO make fig size interactive based on len(variable())
         sns.set(rc={'figure.figsize':(8.27,11.7)})
         return timeseries(data_prep(parse_sta(),select_loc()), variable())
+
+    # warns user when no variables are selected
+    @output
+    @render.text
+    def error():
+        if len(variable()) == 0:
+            return 'Please select at least one variable to visualize!!!'
+        else:
+            return ''
 
 app = App(app_ui, server)

@@ -15,14 +15,20 @@ from sklearn.impute import IterativeImputer
 def data_prep(df_path: str, 
             # sheet_list: list,
             sensor: str) -> pd.DataFrame:
-
-    df= pd.read_excel(df_path, sheet_name=sensor)
-    imp = IterativeImputer(max_iter=10, random_state=0)
-    new_d = pd.DataFrame(np.round(imp.fit_transform(df), 4))
-    new_d.columns= df.columns
-    new_d["Date"] = new_d["Date"].astype(int).astype(str)
-    new_d["Date"] = pd.to_datetime(new_d["Date"], format="%Y%m%d")
-    return new_d
+    if sensor == '':
+        return None
+    else:
+        data = pd.read_excel(df_path, sheet_name = sensor)
+        data= data.loc[:, ['Date','NEE', 'SW_IN', 'TA', 'VPD', 'P', \
+                            'SWC', 'WS', 'TS', 'WTD', 'WTDdiff', 'PDSI', \
+                            'LAI_month_max', 'FAPAR_month_max', 'NDVI', \
+                            'SIF_daily_8day', 'SIF_month']]
+        data.set_index('Date', inplace=True)
+        data.index = pd.to_datetime(data.index, format='%Y%m%d')
+        for columns in data.columns:
+            data[columns] = data[columns].replace(-9999, np.nan)
+            data[columns] = data.groupby(data.index.dayofyear)[columns].transform(lambda x: x.fillna(x.mean()))
+        return data
 
 def plot_map(df: pd.DataFrame):
     token = 'pk.eyJ1IjoiZGVubmlzd3UyOCIsImEiOiJjbGl6NmJ3ZDYwNDNrM2NuZW1lNmEwMzAwIn0.NupBJ_bWkbOZLy2gC6JeMg'
@@ -64,10 +70,12 @@ def plot_map(df: pd.DataFrame):
 
 
 def timeseries(df: pd.DataFrame, variable: list[str]):
-    index= 0
-    fig, axes= plt.subplots(len(variable),1,squeeze= False)
-    for var in variable:
-        sns.lineplot(x='Date', y= var, data=df, ax= axes[index,0])
-        index+=1
-
-    return fig
+    if len(variable) == 0:
+        return None
+    else:
+        index= 0
+        fig, axes= plt.subplots(len(variable),1,squeeze= False)
+        for var in variable:
+            sns.lineplot(x='Date', y= var, data=df, ax= axes[index,0])
+            index+=1
+        return fig
