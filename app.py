@@ -13,50 +13,115 @@ from util import data_prep, plot_map, timeseries
 
 # default map
 def_loc = pd.read_excel('./data/flux_site_loc_def.xlsx')
+# sensor data, so user only has to upload once
+data_train = None
 
 app_ui = ui.page_fluid(
-    ui.panel_title("View time series' for your site"),
-    ui.layout_sidebar(
-        ui.panel_sidebar(
-            ui.input_checkbox_group("var", "Variable(s) to Visualize:", 
-                {
-                    "NEE" : "NEE",
-                    "SW_IN" : "SW_IN",
-                    "TA" : "TA",
-                    "VPD" : "VPD",
-                    "P" : "P",
-                    "SWC" : "SWC",
-                    "WS" : "WS",
-                    "TS" : "TS",
-                    "WTD" : "WTD",
-                    "WTDdiff" : "WTDdiff",
-                    "PDSI" : "PDSI",
-                    "LAI_month_max" : "LAI_month_max",
-                    "FAPAR_month_max" : "FAPAR_month_max",
-                    "NDVI" : "NDVI",
-                    "SIF_daily_8day" : "SIF_daily_8day",
-                    "SIF_month" : "SIF_month"
-                }),
-            ui.output_text("error")
+    ui.navset_tab_card(
+        ## data visualization tab ##
+        ui.nav("Site Data Visualization",
+            ui.panel_title("View time series' for your site"),
+            ui.layout_sidebar(
+                ui.panel_sidebar(
+                    ui.input_checkbox_group("var", "Variable(s) to Visualize:", 
+                        {
+                            "NEE" : "NEE",                                    
+                            "SW_IN" : "SW_IN",
+                            "TA" : "TA",
+                            "VPD" : "VPD",
+                            "P" : "P",
+                            "SWC" : "SWC",
+                            "WS" : "WS",
+                            "TS" : "TS",
+                            "WTD" : "WTD",
+                            "WTDdiff" : "WTDdiff",
+                            "PDSI" : "PDSI",
+                            "LAI_month_max" : "LAI_month_max",
+                            "FAPAR_month_max" : "FAPAR_month_max",
+                            "NDVI" : "NDVI",
+                            "SIF_daily_8day" : "SIF_daily_8day",
+                            "SIF_month" : "SIF_month"
+                        }),
+                    ui.output_text("error")
+                ),
+                ui.panel_main(
+                    ui.row(
+                        ui.column(5,
+                            ui.input_file(
+                                "file1", "#1 Upload your site locations (.xlsx)", accept=[".xlsx"]
+                            )),
+                        ui.column(5, 
+                            ui.input_file(
+                                "file2", "#2 Upload your data (.xlsx)", accept=[".xlsx"]
+                            ))
+                    ),
+                    ui.output_text("loc"),
+                    output_widget("map"),
+                )
+            ),
+            ui.output_plot("show_timeseries")    
         ),
-        ui.panel_main(
+
+        ## ML tab ##
+        ui.nav("Predicting NEE",
+            ui.panel_title("Predict NEE for your data"),
             ui.row(
                 ui.column(5,
                     ui.input_file(
-                        "file1", "#1 Upload your site locations (.xlsx)", accept=[".xlsx"]
+                        "file3", "#1 Upload your data to predict on (.xlsx)", accept=[".xlsx"]
                     )),
-                ui.column(5, ui.input_file(
-                    "file2", "#2 Upload your data (.xlsx)", accept=[".xlsx"]
-                ))
+                ui.column(5, 
+                    ui.input_radio_buttons(
+                        "model",
+                        "#2 Select a machine learning model",
+                        {
+                            "rf": "Random Forest",
+                            "svm": "Support Vector Machine"
+                        },
+                        inline=True
+                    ))
             ),
-            ui.output_text("loc"),
-            output_widget("map"),
+            ui.output_text("params"),
+            ui.row(
+                ui.column(5,
+                    ui.output_plot("act_v_pred")
+                ),
+                ui.column(5,
+                    ui.output_plot("feature_importance")
+                )
+            ),
+            ui.layout_sidebar(
+                ui.panel_sidebar(
+                    ui.input_checkbox_group("var2", "Partial Dependence(s):", 
+                        {
+                            "NEE" : "NEE",                                    
+                            "SW_IN" : "SW_IN",
+                            "TA" : "TA",
+                            "VPD" : "VPD",
+                            "P" : "P",
+                            "SWC" : "SWC",
+                            "WS" : "WS",
+                            "TS" : "TS",
+                            "WTD" : "WTD",
+                            "WTDdiff" : "WTDdiff",
+                            "PDSI" : "PDSI",
+                            "LAI_month_max" : "LAI_month_max",
+                            "FAPAR_month_max" : "FAPAR_month_max",
+                            "NDVI" : "NDVI",
+                            "SIF_daily_8day" : "SIF_daily_8day",
+                            "SIF_month" : "SIF_month"
+                        }),
+                ),
+                ui.panel_main(
+                    ui.output_plot("partial_dep")
+                )
+            ),
         )
-    ),
-    ui.output_plot("show_timeseries")    
+    )
 )
 
 def server(input, output, session):
+    ###### Data Viz #######
     map = plot_map(def_loc)
 
     # makes map reactive
@@ -141,6 +206,7 @@ def server(input, output, session):
         file_2 = input.file2()
         if file_2 is None:
             return pd.DataFrame()
+        data_train = file_2[0]["datapath"]
         return file_2[0]["datapath"]
     
     # returns the list of variables the user checked
@@ -164,5 +230,61 @@ def server(input, output, session):
             return 'Please select at least one variable to visualize!!!'
         else:
             return ''
+    
+    ###### ML ######
+    # Read data to make predictions on
+    @reactive.Calc
+    @reactive.event(input.file3)
+    def parse_pred():
+        file_3 = input.file3()
+        if file_3 is None:
+            return pd.DataFrame()
+        return pd.read_excel(file_3[0]["datapath"])
+
+    # returns the model the user selected
+    @reactive.event(input.var)
+    def model():
+        return input.var()
+    
+    # displays model parameters
+    @output
+    @render.text
+    def params():
+        # TO DO
+        # calls a function in util 
+        return None
+    
+    # displays graph of actual vs predicted NEE on test data
+    @output
+    @render.plot
+    def act_v_pred():
+        # TO DO
+        # calls a function in util
+        return None
+    
+    # displays graph of feature importance
+    @output
+    @render.plot
+    def feature_importance():
+        # TO DO
+        # calls a function in util
+        return None
+
+    # returns the list of variables the user checked
+    @reactive.event(input.var2)
+    def variable2():
+        return input.var2()
+
+    # displays partial dependency plots
+    @output
+    @render.plot
+    def partial_dep():
+        # TO DO
+        # calls a function in util 
+        # training/test data = data_train
+        # data to predict on = parse_pred()
+        # model type = model()
+        # variables to create plot on = variable2()
+        return None
 
 app = App(app_ui, server)
