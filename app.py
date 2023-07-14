@@ -13,17 +13,16 @@ from util import data_prep, plot_map, timeseries
 
 # default map
 def_loc = pd.read_excel('./data/flux_site_loc_def.xlsx')
-# sensor data, so user only has to upload once
-data_train = None
 
 app_ui = ui.page_fluid(
     ui.navset_tab_card(
         ## data visualization tab ##
         ui.nav("Site Data Visualization",
             ui.panel_title("View time series' for your site"),
+            ui.h6("Please complete steps in order to avoid errors!"),
             ui.layout_sidebar(
                 ui.panel_sidebar(
-                    ui.input_checkbox_group("var", "Variable(s) to Visualize:", 
+                    ui.input_checkbox_group("var", "#4 Variable(s) to Visualize:", 
                         {
                             "NEE" : "NEE",                                    
                             "SW_IN" : "SW_IN",
@@ -58,8 +57,8 @@ app_ui = ui.page_fluid(
                     ui.output_text("loc"),
                     output_widget("map"),
                 )
-            ),
-            ui.output_plot("show_timeseries")    
+            ),   
+            ui.output_ui("timeseries_container") 
         ),
 
         ## ML tab ##
@@ -69,6 +68,9 @@ app_ui = ui.page_fluid(
                 ui.column(5,
                     ui.input_file(
                         "file3", "#1 Upload your data to predict on (.xlsx)", accept=[".xlsx"]
+                    ),
+                    ui.input_file(
+                        "file4", "#2 Upload your data to train on (.xlsx)", accept=[".xlsx"]
                     )),
                 ui.column(5, 
                     ui.input_radio_buttons(
@@ -76,7 +78,8 @@ app_ui = ui.page_fluid(
                         "#2 Select a machine learning model",
                         {
                             "rf": "Random Forest",
-                            "svm": "Support Vector Machine"
+                            "svm": "Support Vector Machine",
+                            "ann" : "Artificial Neural Network"
                         },
                         inline=True
                     ))
@@ -93,8 +96,7 @@ app_ui = ui.page_fluid(
             ui.layout_sidebar(
                 ui.panel_sidebar(
                     ui.input_checkbox_group("var2", "Partial Dependence(s):", 
-                        {
-                            "NEE" : "NEE",                                    
+                        {                                   
                             "SW_IN" : "SW_IN",
                             "TA" : "TA",
                             "VPD" : "VPD",
@@ -111,9 +113,10 @@ app_ui = ui.page_fluid(
                             "SIF_daily_8day" : "SIF_daily_8day",
                             "SIF_month" : "SIF_month"
                         }),
+                    ui.output_text("error2"),
                 ),
                 ui.panel_main(
-                    ui.output_plot("partial_dep")
+                    ui.output_plot("partial_dep_container")
                 )
             ),
         )
@@ -123,7 +126,6 @@ app_ui = ui.page_fluid(
 def server(input, output, session):
     ###### Data Viz #######
     map = plot_map(def_loc)
-
     # makes map reactive
     def update_point(trace, points, selector):
         c = ['#0d6aff'] * map.data[0].lat.size
@@ -209,42 +211,55 @@ def server(input, output, session):
         data_train = file_2[0]["datapath"]
         return file_2[0]["datapath"]
     
-    # returns the list of variables the user checked
+    # returns height of figure in px as string
     @reactive.event(input.var)
-    def variable():
-        return input.var()
-        
-    # displays the timeseries
+    def height_timeseries():
+        return str(len(input.var()) * 200) + "px"
+    
+    # creates the timeseries
     @output
     @render.plot
     def show_timeseries():
-        # TO DO make fig size interactive based on len(variable())
-        sns.set(rc={'figure.figsize':(8.27,11.7)})
-        return timeseries(data_prep(parse_sta(),select_loc()), variable())
+        return timeseries(data_prep(parse_sta(),select_loc()), input.var())
 
+    # outputs timeseries graphs with dynamic height
+    @output
+    @render.ui
+    def timeseries_container():
+        return (ui.output_plot("show_timeseries", height = height_timeseries()),)
+    
     # warns user when no variables are selected
     @output
     @render.text
     def error():
-        if len(variable()) == 0:
+        if len(input.var()) == 0:
             return 'Please select at least one variable to visualize!!!'
         else:
             return ''
     
     ###### ML ######
-    # Read data to make predictions on
+    # Read data to train model on
     @reactive.Calc
     @reactive.event(input.file3)
-    def parse_pred():
+    def parse_train():
         file_3 = input.file3()
         if file_3 is None:
             return pd.DataFrame()
         return pd.read_excel(file_3[0]["datapath"])
+    
+    # Read data to make predictions on
+    @reactive.Calc
+    @reactive.event(input.file4)
+    def parse_pred():
+        file_4 = input.file4()
+        if file_4 is None:
+            return pd.DataFrame()
+        return pd.read_excel(file_4[0]["datapath"])
 
     # returns the model the user selected
-    @reactive.event(input.var)
+    @reactive.event(input.model)
     def model():
-        return input.var()
+        return input.model()
     
     # displays model parameters
     @output
@@ -270,21 +285,36 @@ def server(input, output, session):
         # calls a function in util
         return None
 
-    # returns the list of variables the user checked
-    @reactive.event(input.var2)
-    def variable2():
-        return input.var2()
+    # returns height of figure in px as string
+    @reactive.event(input.var)
+    def height_partial_dep():
+        return str(len(input.var()) * 200) + "px"
 
-    # displays partial dependency plots
+    # creates partial dependency plots
     @output
     @render.plot
-    def partial_dep():
+    def show_partial_dep():
         # TO DO
         # calls a function in util 
-        # training/test data = data_train
+        # training/test data = parse_train()
         # data to predict on = parse_pred()
         # model type = model()
         # variables to create plot on = variable2()
         return None
-
+    
+    # outputs partial dependency plots with dynamic height
+    @output
+    @render.ui
+    def partial_dep_container():
+        return (ui.output_plot("show_partial_dep", height = height_partial_dep()),)
+    
+    # warns user when no variables are selected
+    @output
+    @render.text
+    def error2():
+        if len(input.var2()) == 0:
+            return 'Please select at least one variable to visualize!!!'
+        else:
+            return ''
+        
 app = App(app_ui, server)
