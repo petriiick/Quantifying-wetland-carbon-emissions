@@ -9,7 +9,7 @@ import seaborn as sns
 import plotly.graph_objects as go
 from shinywidgets import output_widget, register_widget, reactive_read, render_widget
 
-from util import data_prep, plot_map, timeseries
+from util import data_prep, plot_map, timeseries, rf, rf_partialdep
 
 # default map
 def_loc = pd.read_excel('./data/flux_site_loc_def.xlsx')
@@ -238,6 +238,8 @@ def server(input, output, session):
             return ''
     
     ###### ML ######
+    best_parameters, score, actual_pred, feature_import, model = None, None, None, None, None
+
     # Read data to train model on
     @reactive.Calc
     @reactive.event(input.file3)
@@ -245,6 +247,7 @@ def server(input, output, session):
         file_3 = input.file3()
         if file_3 is None:
             return pd.DataFrame()
+        best_parameters, score, actual_pred, feature_import, model= rf(parse_train())
         return pd.read_excel(file_3[0]["datapath"])
     
     # Read data to make predictions on
@@ -265,25 +268,19 @@ def server(input, output, session):
     @output
     @render.text
     def params():
-        # TO DO
-        # calls a function in util 
-        return None
+        return best_parameters, score
     
     # displays graph of actual vs predicted NEE on test data
     @output
     @render.plot
     def act_v_pred():
-        # TO DO
-        # calls a function in util
-        return None
+        return actual_pred
     
     # displays graph of feature importance
     @output
     @render.plot
     def feature_importance():
-        # TO DO
-        # calls a function in util
-        return None
+        return feature_import
 
     # returns height of figure in px as string
     @reactive.event(input.var)
@@ -294,13 +291,7 @@ def server(input, output, session):
     @output
     @render.plot
     def show_partial_dep():
-        # TO DO
-        # calls a function in util 
-        # training/test data = parse_train()
-        # data to predict on = parse_pred()
-        # model type = model()
-        # variables to create plot on = variable2()
-        return None
+        return model
     
     # outputs partial dependency plots with dynamic height
     @output
