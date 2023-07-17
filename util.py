@@ -42,20 +42,6 @@ def data_prep(df_path: str,
         for columns in data.columns:
             data[columns] = data[columns].replace(-9999, np.nan)
             data[columns] = data.groupby(data.index.dayofyear)[columns].transform(lambda x: x.fillna(x.mean()))
-        # feature engineering
-        data['season'] = data['Month'] 
-        data['season'] = data['season'].replace([2,12], 1)
-        data['season'] = data['season'].replace([3,4,5], 2)
-        data['season'] = data['season'].replace([6,7,8], 3)
-        data['season'] = data['season'].replace([9,10,11], 4)
-        # one hot encoding
-        onehotcols = ['Month','season']
-        onehot_enc = OneHotEncoder(handle_unknown='ignore')
-        onehot_enc.fit(data[onehotcols])
-        colnames = columns=list(onehot_enc.get_feature_names(input_features=onehotcols))
-        onehot_vals = onehot_enc.transform(data[onehotcols]).toarray()
-        enc_df = pd.DataFrame(onehot_vals,columns=colnames,index=data.index)
-        data = pd.concat([data,enc_df],axis=1).drop(onehotcols,axis=1)
         return data
 
 def plot_map(df: pd.DataFrame):
@@ -108,7 +94,32 @@ def timeseries(df: pd.DataFrame, variable: list[str]):
             index+=1
         return fig
 
+def data_prep_model(df_path: str) -> pd.DataFrame:
+    data = pd.read_excel(df_path, sheet_name = sensor)
+    data.set_index('Date', inplace=True)
+    data.index = pd.to_datetime(data.index, format='%Y%m%d')
+    for columns in data.columns:
+        data[columns] = data[columns].replace(-9999, np.nan)
+        data[columns] = data.groupby(data.index.dayofyear)[columns].transform(lambda x: x.fillna(x.mean()))
+    # feature engineering
+    data['season'] = data['Month'] 
+    data['season'] = data['season'].replace([2,12], 1)
+    data['season'] = data['season'].replace([3,4,5], 2)
+    data['season'] = data['season'].replace([6,7,8], 3)
+    data['season'] = data['season'].replace([9,10,11], 4)
+    # one hot encoding
+    onehotcols = ['Month','season']
+    onehot_enc = OneHotEncoder(handle_unknown='ignore')
+    onehot_enc.fit(data[onehotcols])
+    colnames = columns=list(onehot_enc.get_feature_names(input_features=onehotcols))
+    onehot_vals = onehot_enc.transform(data[onehotcols]).toarray()
+    enc_df = pd.DataFrame(onehot_vals,columns=colnames,index=data.index)
+    data = pd.concat([data,enc_df],axis=1).drop(onehotcols,axis=1)
+    return data
+
+
 def rf(df: pd.DataFrame):
+    
     # Labels are the values we "want to predict
     labels = np.array(df['NEE'])
     # Remove the labels from the features
@@ -185,5 +196,4 @@ def rf_partialdep(df,model,variable):
     ax2.set_xlabel("SW_IN")
     ax2.set_ylabel("Partial dependence")
     plt.subplots_adjust(hspace = 0.3)
-    
     return f

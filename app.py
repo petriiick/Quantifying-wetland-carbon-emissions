@@ -9,7 +9,7 @@ import seaborn as sns
 import plotly.graph_objects as go
 from shinywidgets import output_widget, register_widget, reactive_read, render_widget
 
-from util import data_prep, plot_map, timeseries, rf, rf_partialdep
+from util import data_prep, plot_map, timeseries, rf, rf_partialdep, data_prep_model
 
 # default map
 def_loc = pd.read_excel('./data/flux_site_loc_def.xlsx')
@@ -247,7 +247,7 @@ def server(input, output, session):
         file_3 = input.file3()
         if file_3 is None:
             return pd.DataFrame()
-        best_parameters, score, actual_pred, feature_import, model= rf(parse_train())
+        best_parameters, score, actual_pred, feature_import, model= rf(pd.read_excel(file_3[0]["datapath"]))
         return pd.read_excel(file_3[0]["datapath"])
     
     # Read data to make predictions on
@@ -268,7 +268,10 @@ def server(input, output, session):
     @output
     @render.text
     def params():
-        return best_parameters, score
+        df = data_prep_model(parse_train)
+        return rf(df)[:2]
+        # return best_parameters, score
+        
     
     # displays graph of actual vs predicted NEE on test data
     @output
@@ -291,7 +294,7 @@ def server(input, output, session):
     @output
     @render.plot
     def show_partial_dep():
-        return model
+        return rf_partialdep(parse_train(), model, input.var2())
     
     # outputs partial dependency plots with dynamic height
     @output
