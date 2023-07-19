@@ -95,7 +95,15 @@ def timeseries(df: pd.DataFrame, variable: list[str]):
         return fig
 
 def data_prep_model(df_path: str) -> pd.DataFrame:
-    data = pd.read_excel(df_path, sheet_name = sensor)
+    # concat data
+    sheet_names = pd.ExcelFile(df_path).sheet_names
+    df_list = [
+        pd.read_excel(df_path, sheet_name=sheet).assign(sheet_name=sheet)
+        for sheet in sheet_names
+    ]
+    data = pd.concat(df_list)
+    data.pop()
+    # data imputation
     data.set_index('Date', inplace=True)
     data.index = pd.to_datetime(data.index, format='%Y%m%d')
     for columns in data.columns:

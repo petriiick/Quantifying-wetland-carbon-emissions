@@ -248,7 +248,7 @@ def server(input, output, session):
         if file_3 is None:
             return pd.DataFrame()
         best_parameters, score, actual_pred, feature_import, model= rf(pd.read_excel(file_3[0]["datapath"]))
-        return pd.read_excel(file_3[0]["datapath"])
+        return file_3[0]["datapath"]
     
     # Read data to make predictions on
     @reactive.Calc
