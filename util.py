@@ -102,7 +102,8 @@ def data_prep_model(df_path: str) -> pd.DataFrame:
         for sheet in sheet_names
     ]
     data = pd.concat(df_list)
-    data.pop()
+    data.drop(data.columns[-1], axis=1, inplace=True)
+    data = data[data.columns.dropna()]
     # data imputation
     data.set_index('Date', inplace=True)
     data.index = pd.to_datetime(data.index, format='%Y%m%d')
@@ -119,26 +120,34 @@ def data_prep_model(df_path: str) -> pd.DataFrame:
     onehotcols = ['Month','season']
     onehot_enc = OneHotEncoder(handle_unknown='ignore')
     onehot_enc.fit(data[onehotcols])
-    colnames = columns=list(onehot_enc.get_feature_names(input_features=onehotcols))
+    colnames = columns=list(onehot_enc.get_feature_names_out(input_features=onehotcols))
     onehot_vals = onehot_enc.transform(data[onehotcols]).toarray()
     enc_df = pd.DataFrame(onehot_vals,columns=colnames,index=data.index)
     data = pd.concat([data,enc_df],axis=1).drop(onehotcols,axis=1)
+    # data.pop('Date')
+    # data.to_excel("data/output.xlsx")  
     return data
 
 
 def rf(df: pd.DataFrame):
+    
+    df = df.dropna()
     
     # Labels are the values we "want to predict
     labels = np.array(df['NEE'])
     # Remove the labels from the features
     # axis 1 refers to the columns
     df_upsampled= df.drop('NEE', axis = 1)
+
+    print(np.isnan(df_upsampled).any())
     # Saving feature names for later use
     feature_list = list(df_upsampled.columns)
     # Convert to numpy array
     features = np.array(df_upsampled)
+
     train_features, test_features, train_labels, test_labels = train_test_split(features, labels, test_size = 0.25, random_state = 42)
     scaler = StandardScaler()
+
     train_features = scaler.fit_transform(train_features)
     test_features = scaler.transform(test_features)
     clf = sklearn.ensemble.RandomForestRegressor(random_state=21)
@@ -146,14 +155,16 @@ def rf(df: pd.DataFrame):
               'min_samples_split': [2, 5, 10],
               'max_depth': [2, 8, 16],
               'max_features': ['auto', 'sqrt','log2'],
-              'n_estimators': [10,50,100,500,1000,2000,5000,10000],
+              'n_estimators': [10,100,1000,2000,5000],
               'min_samples_leaf': [1, 2, 4]}
     gd_sr = GridSearchCV(estimator=clf,
                      param_grid=param_grid,
                      scoring='r2',
                      cv=KFold(n_splits=3, shuffle=True, random_state=21),
                      error_score="raise")
+    print("success 0!")
     gd_sr.fit(train_features, train_labels)
+    print("success 0!")
 
     # new _model with best params
     clf = sklearn.ensemble.RandomForestRegressor(gd_sr.best_params_, random_state=21)
@@ -174,7 +185,7 @@ def rf(df: pd.DataFrame):
     plt.ylim([-15, 15])
     ax.set_xlabel("NEE")
     ax.set_ylabel("NEE Estimated")
-  
+    print("success 1!")
     # feature importance
     importances = list(clf.feature_importances_)
     # List of tuples with variable and importance
@@ -191,7 +202,7 @@ def rf(df: pd.DataFrame):
     plt.xticks(x_values, feature_list, rotation='vertical')
     # Axis labels and title
     plt.ylabel('Importance'); plt.xlabel('Variable'); plt.title('Variable Importances');
-
+    print("success 2!")
     return gd_sr.best_params_, clf.score(test_features,test_labels),fig1, fig2, clf
     # returns best parameters, score, actual vs pred plot, feature importance, model
 
