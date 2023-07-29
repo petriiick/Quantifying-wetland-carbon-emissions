@@ -150,24 +150,26 @@ def rf(df: pd.DataFrame):
 
     train_features = scaler.fit_transform(train_features)
     test_features = scaler.transform(test_features)
-    clf = sklearn.ensemble.RandomForestRegressor(random_state=21)
-    param_grid = {'bootstrap': [True, False],
-              'min_samples_split': [2, 5, 10],
-              'max_depth': [2, 8, 16],
-              'max_features': ['auto', 'sqrt','log2'],
-              'n_estimators': [10,100,1000,2000,5000],
-              'min_samples_leaf': [1, 2, 4]}
-    gd_sr = GridSearchCV(estimator=clf,
-                     param_grid=param_grid,
-                     scoring='r2',
-                     cv=KFold(n_splits=3, shuffle=True, random_state=21),
-                     error_score="raise")
-    print("success 0!")
-    gd_sr.fit(train_features, train_labels)
-    print("success 0!")
+    # clf = sklearn.ensemble.RandomForestRegressor(random_state=21)
+    # param_grid = {'bootstrap': [False],
+    #             'min_samples_split': [2, 5, 10],
+    #             'max_depth': [8, 16, None],
+    #             'max_features': ['sqrt'],
+    #             'n_estimators': [3,5,10,20,30,40,50,60,70,80,90,100,200,300,500],
+    #             'min_samples_leaf': [1, 2, 4]}
+    # gd_sr = GridSearchCV(estimator=clf,
+    #                  param_grid=param_grid,
+    #                  scoring='r2',
+    #                  cv=KFold(n_splits=3, shuffle=True, random_state=21),
+    #                  error_score="raise")
+    # print("success 0!")
+    # import warnings
+    # warnings.filterwarnings('ignore')
+    # gd_sr.fit(train_features, train_labels)
+    # print("success 0!")
 
     # new _model with best params
-    clf = sklearn.ensemble.RandomForestRegressor(gd_sr.best_params_, random_state=21)
+    clf = sklearn.ensemble.RandomForestRegressor(bootstrap = False, min_samples_split = 5, min_samples_leaf =2, n_estimators = 40, max_features = 'sqrt', random_state=21)
     clf = clf.fit(train_features, train_labels)
     
     # Prediction
@@ -203,7 +205,7 @@ def rf(df: pd.DataFrame):
     # Axis labels and title
     plt.ylabel('Importance'); plt.xlabel('Variable'); plt.title('Variable Importances');
     print("success 2!")
-    return gd_sr.best_params_, clf.score(test_features,test_labels),fig1, fig2, clf
+    return clf.score(test_features,test_labels),fig1, fig2, clf
     # returns best parameters, score, actual vs pred plot, feature importance, model
 
 def rf_partialdep(df,model,variable):

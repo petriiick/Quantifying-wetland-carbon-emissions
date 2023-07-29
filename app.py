@@ -247,7 +247,7 @@ def server(input, output, session):
         file_3 = input.file3()
         if file_3 is None:
             return pd.DataFrame()
-        best_parameters, score, actual_pred, feature_import, model= rf(data_prep_model(file_3[0]["datapath"]))
+        score, actual_pred, feature_import, model= rf(data_prep_model(file_3[0]["datapath"]))
         return file_3[0]["datapath"]
     
     # Read data to make predictions on
