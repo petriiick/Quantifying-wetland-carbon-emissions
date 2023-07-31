@@ -102,13 +102,20 @@ def data_prep_model(df_path: str) -> pd.DataFrame:
         for sheet in sheet_names
     ]
     data = pd.concat(df_list)
+    # drop sheet name
     data.drop(data.columns[-1], axis=1, inplace=True)
-    data = data[data.columns.dropna()]
+    # drop unnamed columns
+    data.drop(data.filter(regex='Unnamed').columns, axis=1, inplace=True)
+    # check missingness
+    data = data.replace(-9999, np.nan)
+    data = data.dropna(subset=["NEE"])
+    percent_missing = data.isnull().sum() * 100 / len(data)
+    columns_to_drop = percent_missing[percent_missing > 50].index
+    data = data.drop(columns=columns_to_drop)
     # data imputation
     data.set_index('Date', inplace=True)
     data.index = pd.to_datetime(data.index, format='%Y%m%d')
     for columns in data.columns:
-        data[columns] = data[columns].replace(-9999, np.nan)
         data[columns] = data.groupby(data.index.dayofyear)[columns].transform(lambda x: x.fillna(x.mean()))
     # feature engineering
     data['season'] = data['Month'] 
