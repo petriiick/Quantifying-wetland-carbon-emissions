@@ -110,6 +110,7 @@ def data_prep_model(df_path: str) -> pd.DataFrame:
     data = data.replace(-9999, np.nan)
     data = data.dropna(subset=["NEE"])
     percent_missing = data.isnull().sum() * 100 / len(data)
+    print(percent_missing)
     columns_to_drop = percent_missing[percent_missing > 50].index
     data = data.drop(columns=columns_to_drop)
     # data imputation
@@ -176,7 +177,7 @@ def rf(df: pd.DataFrame):
     # print("success 0!")
 
     # new _model with best params
-    clf = sklearn.ensemble.RandomForestRegressor(bootstrap = False, min_samples_split = 5, min_samples_leaf =2, n_estimators = 40, max_features = 'sqrt', random_state=21)
+    clf = sklearn.ensemble.RandomForestRegressor(bootstrap = False, min_samples_split = 3, min_samples_leaf =2, n_estimators = 40, max_features = 'sqrt', random_state=21)
     clf = clf.fit(train_features, train_labels)
     
     # Prediction
@@ -212,8 +213,8 @@ def rf(df: pd.DataFrame):
     # Axis labels and title
     plt.ylabel('Importance'); plt.xlabel('Variable'); plt.title('Variable Importances');
     print("success 2!")
-    return clf.score(test_features,test_labels),fig1, fig2, clf
-    # returns best parameters, score, actual vs pred plot, feature importance, model
+    return clf.score(test_features,test_labels), fig1, fig2, clf # i deleted the best_prarameter output.
+    # returns score, actual vs pred plot, feature importance, model
 
 def rf_partialdep(df,model,variable):
     sk_data0 = partial_dependence(model, X = df, features = variable, percentiles=[0,1])
