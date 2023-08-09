@@ -158,6 +158,8 @@ def rf(df: pd.DataFrame):
 
     train_features = scaler.fit_transform(train_features)
     test_features = scaler.transform(test_features)
+    
+    # Grid Search
     # clf = sklearn.ensemble.RandomForestRegressor(random_state=21)
     # param_grid = {'bootstrap': [False],
     #             'min_samples_split': [2, 5, 10],
@@ -174,12 +176,13 @@ def rf(df: pd.DataFrame):
     # import warnings
     # warnings.filterwarnings('ignore')
     # gd_sr.fit(train_features, train_labels)
+    # print(gd_sr.best_params_)
     # print("success 0!")
 
-    # new _model with best params
-    clf = sklearn.ensemble.RandomForestRegressor(bootstrap = False, min_samples_split = 3, min_samples_leaf =2, n_estimators = 40, max_features = 'sqrt', random_state=21)
+    # new model with best params
+    clf = sklearn.ensemble.RandomForestRegressor(bootstrap = False, min_samples_split = 2, min_samples_leaf =1, n_estimators = 100, max_features = 'sqrt', random_state=21)
     clf = clf.fit(train_features, train_labels)
-    
+    best_param = {'bootstrap': False, 'min_samples_split': 3, 'min_samples_leaf': 2, 'n_estimators': 40, 'max_features': 'sqrt', 'random_state': 21}
     # Prediction
     predictions = clf.predict(test_features)
 
@@ -187,14 +190,15 @@ def rf(df: pd.DataFrame):
     reg = LinearRegression().fit(test_labels.reshape((-1, 1)), predictions)
     a = reg.coef_
     b = reg.intercept_
-    fig1, ax = plt.subplots(1,1,figsize=(9,9))
-    plt.scatter(test_labels, predictions)
-    plt.plot([-15,15],[-15,15],color = 'k')
-    plt.plot(test_labels, a * test_labels + b,color = 'r')
-    plt.xlim([-15, 15])
-    plt.ylim([-15, 15])
-    ax.set_xlabel("NEE")
-    ax.set_ylabel("NEE Estimated")
+    fig, (ax1, ax2)= plt.subplots(2,1,squeeze= True, figsize=(12,12))
+    ax1.scatter(test_labels, predictions)
+    ax1.plot([-15,15],[-15,15],color = 'k')
+    ax1.plot(test_labels, a * test_labels + b,color = 'r')
+    ax1.set_xlim([-15, 15])
+    ax1.set_ylim([-15, 15])
+    ax1.set_xlabel("NEE")
+    ax1.set_ylabel("NEE Estimated")
+    ax1.set_title('NEE Estimated vs Actual')
     print("success 1!")
     # feature importance
     importances = list(clf.feature_importances_)
@@ -207,13 +211,15 @@ def rf(df: pd.DataFrame):
     # list of x locations for plotting
     x_values = list(range(len(importances)))
     # Make a bar chart
-    fig2 = plt.bar(x_values, importances, orientation = 'vertical')
+    ax2.bar(x_values, importances, orientation = 'vertical')
     # Tick labels for x axis
-    plt.xticks(x_values, feature_list, rotation='vertical')
+    ax2.set_xticks(x_values, feature_list, rotation='vertical')
     # Axis labels and title
-    plt.ylabel('Importance'); plt.xlabel('Variable'); plt.title('Variable Importances');
+    ax2.set_ylabel('Importance')
+    ax2.set_xlabel('Variable')
+    ax2.set_title('Variable Importances')
     print("success 2!")
-    return clf.score(test_features,test_labels), fig1, fig2, clf # i deleted the best_prarameter output.
+    return best_param, clf.score(test_features,test_labels), fig, clf
     # returns score, actual vs pred plot, feature importance, model
 
 def rf_partialdep(df,model,variable):

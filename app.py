@@ -85,14 +85,7 @@ app_ui = ui.page_fluid(
                     ))
             ),
             ui.output_text("params"),
-            ui.row(
-                ui.column(5,
-                    ui.output_plot("act_v_pred")
-                ),
-                ui.column(5,
-                    ui.output_plot("feature_importance")
-                )
-            ),
+            ui.output_ui("NEE_container"),
             ui.layout_sidebar(
                 ui.panel_sidebar(
                     ui.input_checkbox_group("var2", "Partial Dependence(s):", 
@@ -238,7 +231,7 @@ def server(input, output, session):
             return ''
     
     ###### ML ######
-    best_parameters, score, actual_pred, feature_import, model = None, None, None, None, None
+    best_parameters, score, subplots, model = None, None, None, None
 
     # Read data to train model on
     @reactive.Calc
@@ -247,7 +240,7 @@ def server(input, output, session):
         file_3 = input.file3()
         if file_3 is None:
             return pd.DataFrame()
-        score, actual_pred, feature_import, model= rf(data_prep_model(file_3[0]["datapath"]))
+        # best_parameters, score, subplots, model= rf(data_prep_model(file_3[0]["datapath"]))
         return file_3[0]["datapath"]
     
     # Read data to make predictions on
@@ -272,18 +265,18 @@ def server(input, output, session):
         return rf(df)[:2]
         # return best_parameters, score
         
-    
-    # displays graph of actual vs predicted NEE on test data
+    # creates the NEE and importance plots
     @output
     @render.plot
-    def act_v_pred():
-        return actual_pred
-    
-    # displays graph of feature importance
+    def show_NEE():
+        return rf(data_prep_model(parse_train()))[2]
+
+    # outputs timeseries graphs with dynamic height
     @output
-    @render.plot
-    def feature_importance():
-        return feature_import
+    @render.ui
+    def NEE_container():
+        return (ui.output_plot("show_NEE", height = '1200px'),)
+    
 
     # returns height of figure in px as string
     @reactive.event(input.var)
